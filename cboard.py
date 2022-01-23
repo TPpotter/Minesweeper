@@ -1,5 +1,5 @@
 import time
-
+import particles
 import pygame
 import random
 
@@ -71,89 +71,100 @@ class Minesweeper(Board):
     def open_cell(self, coords, r):
         x2, y2 = coords[0], coords[1]
         cell = self.board[y2][x2]
+
         if r and cell.__class__.__name__ == 'Block':
-            self.board[y2][x2] = numbers.Flag(self.board[y2][x2].rect.x,
-                                              self.board[y2][x2].rect.y)
-            return
+            self.board[y2][x2].update(r=True)
         if r and cell.__class__.__name__ == 'Mine':
-            self.board[y2][x2] = numbers.FakeFlag(self.board[y2][x2].rect.x,
-                                                  self.board[y2][x2].rect.y)
-            return
-        if r:
-            return
+            self.board[y2][x2].update(r=True)
         if cell.__class__.__name__ == 'Empty':
             return
-        if cell.__class__.__name__ == 'Mine':
+        if not r and cell.__class__.__name__ == 'Mine' and not cell.is_flag:
             for i in numbers.mine_group:
-                i.update()
-            for i in numbers.flag_group:
-                i.update()
+                i.update(end=True)
+            for i in numbers.block_group:
+                i.update(end=True)
             self.locked = True
             return
-        if cell.__class__.__name__ == 'Block':
+        if cell.__class__.__name__ == 'Block' and not cell.is_flag:
             self.board[y2][x2] = numbers.getting_change(self.count_neighbours(x2, y2),
                                                         self.board[y2][x2].rect.x,
                                                         self.board[y2][x2].rect.y)
+
+            for j in numbers.block_group:
+                if j.__class__.__name__ == 'Block' and j.rect.x == self.board[y2][x2].rect.x and\
+                        j.rect.y == self.board[y2][x2].rect.y:
+                    j.kill()
+                    break
 
         if self.board[y2][x2].__class__.__name__ == 'Empty':
             round_ = self.find_neighbours((x2, y2))
             for i in round_:
                 k = i
-                self.open_cell((i[1], i[0]))
+                self.open_cell((i[1], i[0]), False)
 
     def count_neighbours(self, x, y):
         if x == 0 and y == 0:
-            return len(list(filter(lambda z: z.__class__.__name__ == 'Mine',
+            return len(list(filter(lambda z: z.__class__.__name__ == 'Mine' or z.__class__.__name__ == 'FakeFlag',
                                    [self.board[1][0], self.board[0][1], self.board[1][1]])))
 
         if x == 0 and y == self.height - 1:
-            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine',
+            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine' or z.__class__.__name__ == 'FakeFlag',
                                     [self.board[y - 1][0], self.board[y][1], self.board[y - 1][1]]))))
 
         if x == self.width - 1 and y == 0:
-            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine',
+            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine' or z.__class__.__name__ == 'FakeFlag',
                                     [self.board[1][x], self.board[0][x - 1], self.board[1][x - 1]]))))
 
         if x == self.width - 1 and y == self.height - 1:
-            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine',
+            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine' or z.__class__.__name__ == 'FakeFlag',
                                     [self.board[y - 1][x], self.board[y - 1][x - 1], self.board[y][x - 1]]))))
 
         if x == 0:
-            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine', [self.board[y - 1][x],
-                                                                               self.board[y + 1][x],
-                                                                               self.board[y - 1][x + 1],
-                                                                               self.board[y][x + 1],
-                                                                               self.board[y + 1][x + 1]]))))
+            return len(list((filter(lambda z:
+                                    z.__class__.__name__ == 'Mine' or z.__class__.__name__ == 'FakeFlag',
+                                    [self.board[y - 1][x],
+                                     self.board[y + 1][x],
+                                     self.board[y - 1][x + 1],
+                                     self.board[y][x + 1],
+                                     self.board[y + 1][x + 1]]))))
 
         if x == self.width - 1:
-            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine', [self.board[y - 1][x],
-                                                                               self.board[y + 1][x],
-                                                                               self.board[y - 1][x - 1],
-                                                                               self.board[y][x - 1],
-                                                                               self.board[y + 1][x - 1]]))))
+            return len(list((filter(lambda z:
+                                    z.__class__.__name__ == 'Mine' or z.__class__.__name__ == 'FakeFlag',
+                                    [self.board[y - 1][x],
+                                     self.board[y + 1][x],
+                                     self.board[y - 1][x - 1],
+                                     self.board[y][x - 1],
+                                     self.board[y + 1][x - 1]]))))
 
         if y == 0:
-            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine', [self.board[y][x - 1],
-                                                                               self.board[y][x + 1],
-                                                                               self.board[y + 1][x - 1],
-                                                                               self.board[y + 1][x],
-                                                                               self.board[y + 1][x + 1]]))))
+            return len(list((filter(lambda z:
+                                    z.__class__.__name__ == 'Mine' or z.__class__.__name__ == 'FakeFlag',
+                                    [self.board[y][x - 1],
+                                     self.board[y][x + 1],
+                                     self.board[y + 1][x - 1],
+                                     self.board[y + 1][x],
+                                     self.board[y + 1][x + 1]]))))
 
         if y == self.height - 1:
-            return len(list((filter(lambda z: z.__class__.__name__ == 'Mine', [self.board[y][x - 1],
-                                                                               self.board[y][x + 1],
-                                                                               self.board[y - 1][x - 1],
-                                                                               self.board[y - 1][x],
-                                                                               self.board[y - 1][x + 1]]))))
+            return len(list((filter(lambda z:
+                                    z.__class__.__name__ == 'Mine' or z.__class__.__name__ == 'FakeFlag',
+                                    [self.board[y][x - 1],
+                                     self.board[y][x + 1],
+                                     self.board[y - 1][x - 1],
+                                     self.board[y - 1][x],
+                                     self.board[y - 1][x + 1]]))))
 
-        return len(list((filter(lambda z: z.__class__.__name__ == 'Mine', [self.board[y - 1][x],
-                                                                           self.board[y - 1][x + 1],
-                                                                           self.board[y][x + 1],
-                                                                           self.board[y + 1][x + 1],
-                                                                           self.board[y + 1][x],
-                                                                           self.board[y + 1][x - 1],
-                                                                           self.board[y][x - 1],
-                                                                           self.board[y - 1][x - 1]]))))
+        return len(list((filter(lambda z:
+                                z.__class__.__name__ == 'Mine' or z.__class__.__name__ == 'FakeFlag',
+                                [self.board[y - 1][x],
+                                 self.board[y - 1][x + 1],
+                                 self.board[y][x + 1],
+                                 self.board[y + 1][x + 1],
+                                 self.board[y + 1][x],
+                                 self.board[y + 1][x - 1],
+                                 self.board[y][x - 1],
+                                 self.board[y - 1][x - 1]]))))
 
     def find_neighbours(self, coords):
         x2, y2 = coords[0], coords[1]

@@ -28,9 +28,6 @@ class One(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-    def update(self):
-        self.image = One.image
-
 
 class Two(pygame.sprite.Sprite):
     image = load_image('two.png')
@@ -43,9 +40,6 @@ class Two(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-
-    def update(self):
-        self.image = Two.image
 
 
 class Three(pygame.sprite.Sprite):
@@ -60,9 +54,6 @@ class Three(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-    def update(self):
-        self.image = Three.image
-
 
 class Four(pygame.sprite.Sprite):
     image = load_image('four.png')
@@ -76,8 +67,7 @@ class Four(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-    def update(self):
-        self.image = Four.image
+        self.is_flag = False
 
 
 class Five(pygame.sprite.Sprite):
@@ -92,8 +82,7 @@ class Five(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-    def update(self):
-        self.image = Five.image
+        self.is_flag = False
 
 
 class Six(pygame.sprite.Sprite):
@@ -108,9 +97,6 @@ class Six(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-    def update(self):
-        self.image = Six.image
-
 
 class Seven(pygame.sprite.Sprite):
     image = load_image('seven.png')
@@ -123,9 +109,6 @@ class Seven(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-
-    def update(self):
-        self.image = Seven.image
 
 
 class Eight(pygame.sprite.Sprite):
@@ -140,21 +123,33 @@ class Eight(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
-    def update(self):
-        self.image = Eight.image
-
 
 class Block(pygame.sprite.Sprite):
-    image_open = load_image('block.png')
-    image_open = pygame.transform.scale(image_open, (30, 30))
+    image = load_image('block.png')
+    image = pygame.transform.scale(image, (30, 30))
 
     def __init__(self, x, y):
         super().__init__(block_group)
 
-        self.image = Block.image_open
+        self.image = Block.image
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+        self.is_flag = False
+
+    def update(self, r=False, end=False):
+        if r:
+            self.is_flag = not self.is_flag
+
+        if self.is_flag and not end:
+            self.image = Flag.image
+
+        if self.is_flag and end:
+            self.image = FakeFlag.image
+
+        if not self.is_flag:
+            self.image = Block.image
 
 
 class Empty(pygame.sprite.Sprite):
@@ -168,9 +163,6 @@ class Empty(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-
-    def update(self):
-        self.image = Empty.image
 
 
 class Mine(pygame.sprite.Sprite):
@@ -186,46 +178,32 @@ class Mine(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.is_flag = False
 
-    def update(self):
-        self.image = Mine.image
+    def update(self, r=False, end=False):
+        if r:
+            self.is_flag = not self.is_flag
+        if not self.is_flag and end:
+            self.image = Mine.image
+        if self.is_flag:
+            self.image = Flag.image
+        if not self.is_flag and not end:
+            self.image = Mine.image_open
 
 
 class Flag(pygame.sprite.Sprite):
     image = load_image('flagged.png')
     image = pygame.transform.scale(image, (30, 30))
 
-    def __init__(self, x, y):
-        super().__init__(block_group)
-
-        self.image = Flag.image
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-
 
 class FakeFlag(pygame.sprite.Sprite):
-    image = load_image('flagged.png')
+    image = load_image('fake_flag.png')
     image = pygame.transform.scale(image, (30, 30))
-
-    image_load = load_image('fake_flag.png')
-    image_load = pygame.transform.scale(image_load, (30, 30))
-
-    def __init__(self, x, y):
-        super().__init__(flag_group)
-
-        self.image = FakeFlag.image
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-
-    def update(self):
-        self.image = FakeFlag.image_load
 
 
 block_group = pygame.sprite.Group()
 mine_group = pygame.sprite.Group()
-flag_group = pygame.sprite.Group()
+
 
 
 def getting_change(n, x, y):
